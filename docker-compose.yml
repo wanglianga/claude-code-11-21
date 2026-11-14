@@ -1,0 +1,31 @@
+# 一键启动：docker compose up --build
+# 服务就绪后访问 http://127.0.0.1:8000/docs
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ccdev
+      POSTGRES_PASSWORD: ccdev
+      POSTGRES_DB: ccdev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ccdev -d ccdev"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://ccdev:ccdev@db:5432/ccdev
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
